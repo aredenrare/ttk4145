@@ -37,19 +37,19 @@ func UDPClient() {
 	strEcho := "Forbløffis McNøffis at your sørviss"
 	servAddr := "129.241.187.38:20001"
 	udpAddr, err := net.ResolveUDPAddr("udp", servAddr)
-	CheckError(err)
+	NetCheckError(err)
 
 	conn, err := net.DialUDP("udp", nil, udpAddr)
-	CheckError(err)
+	NetCheckError(err)
 	
 	defer conn.Close()
 
 	_, err = conn.Write([]byte(strEcho))
-	CheckError(err)
+	NetCheckError(err)
 	println("write to server = ", strEcho)
 
 	reply := make([]byte, 1024)
 	_, err = conn.Read(reply)
-	CheckError(err)
+	NetCheckError(err)
 	println("reply from server=", string(reply))
 }

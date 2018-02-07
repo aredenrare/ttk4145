@@ -1,8 +1,7 @@
 package main
 
 import(
-	def "definitons"
-	"UDP"
+	"./network"
 )
 
 func main(){
