@@ -1,15 +1,14 @@
 package network
 
-import (
-    "fmt"
-    "net"
-    "os"
+import(
+	"fmt"
+	"os"
+	"time"
 )
 
-func NetCheckError(err error) {
-    if err  != nil {
-        fmt.Println("Error: " , err)
-        os.Exit(0)
-    }
+// Function needs to be run in loop
+// 
+func setheartbeat(sendHeartbeatCh <- chan bool, check bool){
+	sendHeartbeatCh <- check
 }
 
