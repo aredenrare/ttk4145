@@ -8,3 +8,7 @@ func Init(a int, initCheck bool){
 		initCheck = true
 	}
 }
+
+func Stop(){
+	
+}

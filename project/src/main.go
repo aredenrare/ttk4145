@@ -2,7 +2,8 @@ package main
 
 import(
 	"./driver/elevio"
-	"./driver/states"
+    //"./driver/states"
+    q "./queue"
 	"fmt"
 )
 
@@ -22,8 +23,10 @@ func main(){
 
     elevio.Init("localhost:15657", numFloors)
 
-	var init bool = false
-	var d elevio.MotorDirection = elevio.MD_Down
+	//var init bool = false
+    var d elevio.MotorDirection = elevio.MD_Down
+    var d_temp elevio.MotorDirection
+    var cur_floor int
     elevio.SetMotorDirection(d)
 	
 	drv_buttons := make(chan elevio.ButtonEvent)
@@ -37,19 +40,33 @@ func main(){
     go elevio.PollStopButton(drv_stop)
 
     for {
+        d_temp = q.ChooseDirection(cur_floor, d)
+        d = d_temp
+        elevio.SetMotorDirection(d)
         select {
         case a := <- drv_buttons:
-            fmt.Printf("%+v\n", a)
-            elevio.SetButtonLamp(a.Button, a.Floor, true)
-            
-        case a := <- drv_floors:
+            //fmt.Printf("%+v\n", a)
+            q.AddToQueue(a)
+            q.PrintQueue()
 
-            fmt.Printf("%+v\n", a)
-            states.Init(a,init)
+
+        case a := <- drv_floors:
+            cur_floor = a
             elevio.SetFloorIndicator(a)
+            if q.ShouldStop(a,d) {
+                d_temp = elevio.MD_Stop
+                q.ClearAtCurrentFloor(a)
+                q.PrintQueue()
+            } else {
+                d_temp = q.ChooseDirection(a, d)
+            }
+            d = d_temp
+            //fmt.Printf("d_temp=%+v\n",d_temp)
+            elevio.SetMotorDirection(d)
+
             
         case a := <- drv_obstr:
-            fmt.Printf("%+v\n", a)
+            fmt.Printf("Obstr = %+v\n", a)
             if a {
                 elevio.SetMotorDirection(elevio.MD_Stop)
             } else {
@@ -63,6 +80,7 @@ func main(){
                     elevio.SetButtonLamp(b, f, false)
                 }
             }
+            q.ResetQueue()
         }
     }
 
