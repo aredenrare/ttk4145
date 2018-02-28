@@ -1,16 +1,18 @@
-package main_driver
+package main
 
 import "./elevio"
+import "./states"
 import "fmt"
 
 func main(){
-
+    
     numFloors := 4
 
     elevio.Init("localhost:15657", numFloors)
     
+
     var d elevio.MotorDirection = elevio.MD_Up
-    //elevio.SetMotorDirection(d)
+    elevio.SetMotorDirection(d)
     
     drv_buttons := make(chan elevio.ButtonEvent)
     drv_floors  := make(chan int)
@@ -30,14 +32,15 @@ func main(){
             elevio.SetButtonLamp(a.Button, a.Floor, true)
             
         case a := <- drv_floors:
+
             fmt.Printf("%+v\n", a)
             if a == numFloors-1 {
                 d = elevio.MD_Down
             } else if a == 0 {
                 d = elevio.MD_Up
             }
+            elevio.SetFloorIndicator(a)
             elevio.SetMotorDirection(d)
-            
             
         case a := <- drv_obstr:
             fmt.Printf("%+v\n", a)
