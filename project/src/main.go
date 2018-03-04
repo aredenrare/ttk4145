@@ -1,34 +1,35 @@
 package main
 
 import(
-	"./driver/elevio"
-    //"./driver/states"
-    q "./queue"
-    state "./states"
-	"fmt"
+	elevio  "./driver/elevio"
+    q       "./queue"
+    state   "./states"
+    bcast   "./network/bcast"
+    "fmt"
+    "time"
 )
 
+var numFloors int = 4
+var initFlag bool = false
+var cur_floor int
+var doorOpenTime = time.Second*2
+var doorOpen = false
 func main(){
 	
 	// Get channels
-	//getOrderCh	 	:= 	make(chan elevio.ButtonEvent)
-	//getCostCh 		:= 	make(chan int)
+    RecOrderCh	 	:= 	make(chan elevio.ButtonEvent)
+    //getCostCh 		:= 	make(chan int)
 	//getHeartbeatCh 	:= 	make(chan bool)
 
 	//Send channels
-	//sendOrderCh 	:= 	make(chan elevio.ButtonEvent)
+	TrOrderCh 	:= 	make(chan elevio.ButtonEvent)
 	//sendCostCh		:=	make(chan int)
 	//sendHeartbeatCh := 	make(chan bool)
 
-    numFloors := 4
-
     elevio.Init("localhost:15657", numFloors)
-
-	//var init bool = false
     var d elevio.MotorDirection = elevio.MD_Down
     var d_temp elevio.MotorDirection
-    var initFlag bool = false
-    var cur_floor int
+
     elevio.SetMotorDirection(d)
 	
 	drv_buttons := make(chan elevio.ButtonEvent)
@@ -36,10 +37,16 @@ func main(){
     drv_obstr   := make(chan bool)
     drv_stop    := make(chan bool)    
     
+    // driver routines
     go elevio.PollButtons(drv_buttons)
     go elevio.PollFloorSensor(drv_floors)
     go elevio.PollObstructionSwitch(drv_obstr)
     go elevio.PollStopButton(drv_stop)
+
+    // Message routines
+    go bcast.Transmitter(30001, TrOrderCh)
+    go bcast.Receiver(30001, RecOrderCh)
+
 
     // Initializing the elevator on the first floor
     for (!initFlag){
@@ -51,31 +58,44 @@ func main(){
 
     
     for {
-        d_temp = q.ChooseDirection(cur_floor, d)
+        if doorOpen {
+            d_temp = elevio.MD_Stop
+        } else {
+            d_temp = q.ChooseDirection(cur_floor, d)
+        }
         d = d_temp
         elevio.SetMotorDirection(d)
+        //fmt.Printf("doorOpen = %+v, dir = %+v\n",doorOpen,d)
+        
         select {
+            // A button is triggered
         case a := <- drv_buttons:
-            //fmt.Printf("%+v\n", a)
             q.AddToQueue(a)
-            //q.PrintQueue()
-
-
+            TrOrderCh <- a
+        
+            // A floor is reached
         case a := <- drv_floors:
             cur_floor = a
             elevio.SetFloorIndicator(a)
             if q.ShouldStop(a,d) {
                 d_temp = elevio.MD_Stop
-                q.ClearAtCurrentFloor(a)
+                q.ClearAtCurrentFloor(a, d)
+
+                doorOpen = true
+                elevio.SetDoorOpenLamp(doorOpen)
+                
                 q.PrintQueue()
             } else {
                 d_temp = q.ChooseDirection(a, d)
             }
             d = d_temp
-            //fmt.Printf("d_temp=%+v\n",d_temp)
             elevio.SetMotorDirection(d)
 
-            
+        case <- time.After(doorOpenTime):
+            doorOpen = false
+            elevio.SetDoorOpenLamp(doorOpen)
+
+            // Obstruction triggered
         case a := <- drv_obstr:
             fmt.Printf("Obstr = %+v\n", a)
             if a {
@@ -84,6 +104,7 @@ func main(){
                 elevio.SetMotorDirection(d)
             }
             
+            // Stop triggered
         case a := <- drv_stop:
             fmt.Printf("%+v\n", a)
             for f := 0; f < numFloors; f++ {
@@ -94,5 +115,4 @@ func main(){
             q.ResetQueue()
         }
     }
-
 }

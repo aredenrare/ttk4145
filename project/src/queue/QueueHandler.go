@@ -31,11 +31,12 @@ func AddToQueue(button elevio.ButtonEvent) {
 
 }
 
-func RemoveFromQueue(button elevio.ButtonEvent) {
-	queue.Matrix[button.Floor][button.Button] = false
+func RemoveFromQueue(floor int, button elevio.ButtonType) {
+	queue.Matrix[floor][int(button)] = false
 
 	// Skru av lys (fjernes?)
-	elevio.SetButtonLamp(button.Button, button.Floor, false)
+	newButton := elevio.ButtonEvent{Floor: floor, Button: button}
+	elevio.SetButtonLamp(newButton.Button, newButton.Floor, false)
 }
 
 func ResetQueue(){

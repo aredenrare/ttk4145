@@ -4,6 +4,7 @@ import (
 	"../driver/elevio"
 	q "../queue"
 	"fmt"
+
 )
 
 func Init(floor int) bool{
@@ -22,6 +23,6 @@ func Init(floor int) bool{
 	return initFlag
 }
 
-func Stop(){
-	
+func DoorOpen(isDoorOpen bool) {
+	elevio.SetDoorOpenLamp(isDoorOpen)
 }
