@@ -50,12 +50,10 @@ func ShouldStop(floor int, dir elevio.MotorDirection) bool {
 	switch dir{
 	case elevio.MD_Down:
 		return queue.Matrix[floor][elevio.BT_HallDown] ||
-		queue.Matrix[floor][elevio.BT_Cab] 
-		// || !RequestBelow(floor)
+		queue.Matrix[floor][elevio.BT_Cab] || !RequestBelow(floor)
 	case elevio.MD_Up:
 		return queue.Matrix[floor][elevio.BT_HallUp] ||
-		queue.Matrix[floor][elevio.BT_Cab]
-		// || !RequestAbove(floor)
+		queue.Matrix[floor][elevio.BT_Cab] || !RequestAbove(floor)
 	}
 	return false
 }

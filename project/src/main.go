@@ -4,6 +4,7 @@ import(
 	"./driver/elevio"
     //"./driver/states"
     q "./queue"
+    state "./states"
 	"fmt"
 )
 
@@ -26,6 +27,7 @@ func main(){
 	//var init bool = false
     var d elevio.MotorDirection = elevio.MD_Down
     var d_temp elevio.MotorDirection
+    var initFlag bool = false
     var cur_floor int
     elevio.SetMotorDirection(d)
 	
@@ -39,6 +41,15 @@ func main(){
     go elevio.PollObstructionSwitch(drv_obstr)
     go elevio.PollStopButton(drv_stop)
 
+    // Initializing the elevator on the first floor
+    for (!initFlag){
+        select {
+        case a := <- drv_floors:
+            initFlag = state.Init(a)
+        }
+    }
+
+    
     for {
         d_temp = q.ChooseDirection(cur_floor, d)
         d = d_temp
@@ -47,7 +58,7 @@ func main(){
         case a := <- drv_buttons:
             //fmt.Printf("%+v\n", a)
             q.AddToQueue(a)
-            q.PrintQueue()
+            //q.PrintQueue()
 
 
         case a := <- drv_floors:

@@ -15,6 +15,14 @@ type QueueMatrix struct {
 
 var queue QueueMatrix
 
+func InitQueue() {
+	for i := 0; i < def.NumFloors; i++ {
+		for j := 0; j < def.NumButtons; j++{
+			queue.Matrix[i][j] = false
+		}
+	}
+}
+
 func AddToQueue(button elevio.ButtonEvent) {
 	queue.Matrix[button.Floor][button.Button] = true
 	
@@ -42,8 +50,14 @@ func PrintQueue(){
 	fmt.Println("Queue matrix: ")
 	for i := 0; i < def.NumFloors; i++ {
 		for j := 0; j < def.NumButtons; j++{
-			fmt.Printf("%+v ",queue.Matrix[i][j])
+			if queue.Matrix[i][j] {
+				fmt.Printf("1 ")	
+			}
+			if !queue.Matrix[i][j]{
+				fmt.Printf("0 ")
+			}
 		}
 		fmt.Printf("\n")
 	}
+	fmt.Printf("\n")
 }
