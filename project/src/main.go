@@ -73,6 +73,10 @@ func main(){
             q.AddToQueue(a)
             TrOrderCh <- a
         
+            // Order received over network
+        case a := <- RecOrderCh:
+            fmt.Printf("Received order: floor %+v button %+v\n", a.Floor, a.Button)
+        
             // A floor is reached
         case a := <- drv_floors:
             cur_floor = a
