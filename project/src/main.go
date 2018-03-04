@@ -75,7 +75,8 @@ func main(){
         
             // Order received over network
         case a := <- RecOrderCh:
-            fmt.Printf("Received order: floor %+v button %+v\n", a.Floor, a.Button)
+            fmt.Printf("Received order: floor %+v button %+v\n", a.Floor, int(a.Button))
+            q.AddToQueue(a)
         
             // A floor is reached
         case a := <- drv_floors:
