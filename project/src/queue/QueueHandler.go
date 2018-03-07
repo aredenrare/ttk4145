@@ -9,11 +9,11 @@ import(
 //	Status bool
 //}
 
-type QueueMatrix struct {
-	Matrix [def.NumFloors][def.NumButtons]bool
-}
+//type QueueMatrix struct {
+//	Matrix [def.NumFloors][def.NumButtons]bool
+//}
 
-var queue QueueMatrix
+var queue def.QueueMatrix
 
 func InitQueue() {
 	for i := 0; i < def.NumFloors; i++ {
@@ -61,4 +61,8 @@ func PrintQueue(){
 		fmt.Printf("\n")
 	}
 	fmt.Printf("\n")
+}
+
+func CheckInQueue(floor int, button elevio.ButtonType) bool {
+	return queue.Matrix[floor][int(button)]
 }

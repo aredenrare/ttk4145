@@ -1,4 +1,4 @@
-package main_network
+package main
 
 import (
 	"./bcast"
@@ -16,10 +16,9 @@ import (
 type HelloMsg struct {
 	Message string
 	Iter    int
-	cost	int
 }
 
-func main() {
+func temp_main() {
 	// Our id can be anything. Here we pass it on the command line, using
 	//  `go run main.go -id=our_id`
 	var id string
@@ -53,12 +52,12 @@ func main() {
 	// ... and start the transmitter/receiver pair on some port
 	// These functions can take any number of channels! It is also possible to
 	//  start multiple transmitters/receivers on the same port.
-	go bcast.Transmitter(16569, helloTx)
-	go bcast.Receiver(16569, helloRx)
+	go bcast.Transmitter(30001, helloTx)
+	go bcast.Receiver(30001, helloRx)
 
 	// The example message. We just send one of these every second.
 	go func() {
-		helloMsg := HelloMsg{"Hello from " + id, 0, 0}
+		helloMsg := HelloMsg{"Hello from " + id, 0}
 		for {
 			helloMsg.Iter++
 			helloTx <- helloMsg
