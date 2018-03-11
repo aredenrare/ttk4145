@@ -64,8 +64,11 @@ func AddOrdersToCurrentQueue(queueMat def.QueueMatrix, orderMat def.QueueMatrix)
 	temp := queueMat
 	for flr := 0; flr < def.NumFloors; flr++ {
 		for btn := 0; btn < def.NumButtons; btn++ {
+			tempBtn := elevio.ButtonType(btn)
+			tempButton := elevio.ButtonEvent{Floor: flr, Button: tempBtn}
 			if orderMat.Matrix[flr][btn] == true {
 				temp.Matrix[flr][btn] = true
+				elevio.SetButtonLamp(tempButton.Button, tempButton.Floor, false)
 			}
 		}
 	}

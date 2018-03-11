@@ -130,7 +130,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			elevtr.UpdateMap(msgRec)
 
 		case ordRec := <-orderRx:
-			fmt.Println("received order")
+			// fmt.Println("received order")
 			if ordRec.State.ID == id {
 				tempMat = q.AddOrdersToCurrentQueue(curState.QueueMat, ordRec.State.QueueMat)
 				curState.QueueMat = tempMat
