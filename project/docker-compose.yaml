@@ -1,0 +1,42 @@
+version: '3'
+services:
+  elevator1:
+    depends_on: 
+      - simulator1
+    image: eirare:latest
+    entrypoint: 
+      - "./elevator"
+      - "--simulator"
+      - "simulator1:15657"
+    restart: "no"
+  elevator2:
+    depends_on: 
+      - simulator2
+    image: eirare:latest
+    entrypoint: 
+      - "./elevator"
+      - "--simulator"
+      - "simulator2:15657"
+    restart: "no"
+  simulator1:
+    image: mazzus/graphical-elevator-simulator
+    entrypoint:
+      - "./elevator-simulator"
+      - "-l"
+      - "ERROR"
+      - "-p"
+      - "20"
+    restart: "no"
+    ports:
+      - 3001:3001
+  simulator2:
+    image: mazzus/graphical-elevator-simulator
+    entrypoint:
+      - "./elevator-simulator"
+      - "-l"
+      - "ERROR"
+      - "-p"
+      - "20"
+    restart: "no"
+    ports:
+      - 3002:3001
