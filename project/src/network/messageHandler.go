@@ -1,14 +1,13 @@
 package main
 
 import (
-	"./bcast"
-	"./localip"
-	"./peers"
 	"flag"
 	"fmt"
 	"os"
 	"time"
+
 	def "../definitions"
+	"./localip"
 	//elevio "../driver/elevio"
 )
 
@@ -17,8 +16,8 @@ import (
 //  will be received as zero-values.
 
 type Message struct {
-	id string
-	State   def.ElevInfo
+	id    string
+	State def.ElevInfo
 }
 
 func main() {
@@ -27,7 +26,6 @@ func main() {
 	var ID string
 	flag.StringVar(&id, "id", "", "id of this peer")
 	flag.Parse()
-
 
 	if id == "" {
 		localIP, err := localip.LocalIP()
@@ -38,18 +36,6 @@ func main() {
 		id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
 	}
 	ID = "1"
-
-	peerUpdateCh := make(chan peers.PeerUpdate)
-	peerTxEnable := make(chan bool)
-	
-	go peers.Transmitter(15647, id, peerTxEnable)
-	go peers.Receiver(15647, peerUpdateCh)
-
-	elevInfoTx := make(chan Message)
-	elevInfoRx := make(chan Message)
-
-	go bcast.Transmitter(16569, elevInfoTx)
-	go bcast.Receiver(16569, elevInfoRx)
 
 	go func() {
 		var curState def.ElevInfo
@@ -77,11 +63,11 @@ func main() {
 			fmt.Printf("Received: ID: %v, PrevFloor: %v, dir: %v\n", a.State.ID, a.State.PrevFloor, a.State.Dir)
 			fmt.Printf("Queue:\n")
 			for i := 0; i < def.NumFloors; i++ {
-				for j := 0; j < def.NumButtons; j++{
-					if a.State.QueueMat.Matrix[i][j]{
-						fmt.Printf("1 ")	
+				for j := 0; j < def.NumButtons; j++ {
+					if a.State.QueueMat.Matrix[i][j] {
+						fmt.Printf("1 ")
 					}
-					if !a.State.QueueMat.Matrix[i][j]{
+					if !a.State.QueueMat.Matrix[i][j] {
 						fmt.Printf("0 ")
 					}
 				}

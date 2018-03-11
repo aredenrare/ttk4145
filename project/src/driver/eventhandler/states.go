@@ -1,13 +1,13 @@
-package states
+package eventhandler
 
 import (
-	"../driver/elevio"
-	q "../queue"
 	"fmt"
 
+	q "../../queue"
+	"../elevio"
 )
 
-func Init(floor int) bool{
+func Init(floor int) bool {
 	elevio.SetFloorIndicator(floor)
 	var initFlag bool
 	if floor == 0 {
@@ -16,7 +16,7 @@ func Init(floor int) bool{
 		fmt.Println("Initialized")
 		initFlag = true
 	}
-	if floor != 0{
+	if floor != 0 {
 		elevio.SetMotorDirection(elevio.MD_Down)
 		initFlag = false
 	}

@@ -1,18 +1,23 @@
 package costlogic
 
 import (
-	"../driver/elevio"
+	"fmt"
+
 	def "../definitions"
+	"../driver/elevio"
+	elevtr "../elevtracker"
 	q "../queue"
 )
 
 type costMsg struct {
 	cost int
-	id	string
+	id   string
 }
-const UP int = 1;
-const STOP int = 0;
-const DOWN int = -1;
+
+// Used in this module
+const UP int = 1
+const STOP int = 0
+const DOWN int = -1
 
 // Tar inn heisen State (prevFloor og dir), en ordre (buttonType og floor) og heisen kømatrise
 
@@ -22,8 +27,8 @@ func CalculateCost(curState def.ElevInfo, ordBtn elevio.ButtonEvent) int {
 	checkDir := int(ordBtn.Floor - curState.PrevFloor)
 
 	if curState.PrevFloor == -1 {
-		totCost ++
-	} else if dir != STOP{
+		totCost++
+	} else if dir != STOP {
 		totCost += 2
 	}
 	if dir != STOP {
@@ -48,22 +53,27 @@ func CalculateCost(curState def.ElevInfo, ordBtn elevio.ButtonEvent) int {
 			totCost++
 		}
 	}
+	fmt.Println("Cost = ", totCost)
 	return totCost
 }
 
-
-func ChooseCheapestElevator(elevators []def.ElevInfo, ordBtn elevio.ButtonEvent) def.ElevInfo{
-	lowestCost := CalculateCost(elevators[0], ordBtn)
-	bestElev := elevators[0]
+func ChooseCheapestElevator(ordBtn elevio.ButtonEvent) def.ElevInfo {
+	lowestCost := 1000000
+	var bestElev def.ElevInfo
 	var curCost int
-	
-	numElevAlive := len(elevators)
-	for i:=0;i<numElevAlive;i++ {
-		curCost = CalculateCost(elevators[i], ordBtn)
+	fmt.Printf("len(map) = %+v\n", len(elevtr.ElevMap))
+	for _, value := range elevtr.ElevMap {
+		curCost = CalculateCost(value, ordBtn)
 		if curCost < lowestCost {
 			lowestCost = curCost
-			bestElev = elevators[i]
+			bestElev = value
+		}
+		if len(elevtr.ElevMap) == 1 {
+			return value
 		}
 	}
+
+	tempElev := bestElev
+	bestElev.QueueMat = q.AddToQueue(tempElev.QueueMat, ordBtn)
 	return bestElev
 }
