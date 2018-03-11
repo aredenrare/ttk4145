@@ -25,7 +25,7 @@ var doorOpen = false
 func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan int, drv_obstr <-chan bool,
 	drv_stop <-chan bool, peerUpdateCh <-chan peers.PeerUpdate, peerTxEnable chan<- bool,
 	elevInfoTx chan<- def.Message, elevInfoRx <-chan def.Message, orderTx chan<- def.Message,
-	orderRx <-chan def.Message, localID string) {
+	orderRx <-chan def.Message, id string) {
 
 	var doorTimeout <-chan time.Time
 	heartBeat := time.Tick(def.HeartBeatTime)
@@ -67,6 +67,8 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 				curState.QueueMat = q.AddToQueue(tempMat, btn)
 			} else {
 				tempElev = cost.ChooseCheapestElevator(btn)
+				tempMat = q.AddToQueue(tempElev.QueueMat, btn)
+				tempElev.QueueMat = tempMat
 				TrOrder := def.Message{ID: "", State: tempElev}
 				orderTx <- TrOrder
 			}
@@ -125,13 +127,14 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			}
 
 		case msgRec := <-elevInfoRx:
-
 			elevtr.UpdateMap(msgRec)
 
 		case ordRec := <-orderRx:
-			if ordRec.ID == localID {
+			fmt.Println("received order")
+			if ordRec.State.ID == id {
 				tempMat = q.AddOrdersToCurrentQueue(curState.QueueMat, ordRec.State.QueueMat)
 				curState.QueueMat = tempMat
+				q.PrintQueue(curState.QueueMat)
 			}
 		case <-heartBeat:
 			TrState := def.Message{ID: "", State: curState}

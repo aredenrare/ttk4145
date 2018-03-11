@@ -26,7 +26,6 @@ func main() {
 		}
 		id = fmt.Sprintf("%s", localIP)
 	}
-	localID := id
 
 	// Hardware channels
 	drv_buttons := make(chan elevio.ButtonEvent)
@@ -57,7 +56,7 @@ func main() {
 	go bcast.Receiver(32001, orderRx)
 
 	go evhandler.EventHandlerMain(drv_buttons, drv_floors, drv_obstr, drv_stop,
-		peerUpdateCh, peerTxEnable, elevInfoTx, elevInfoRx, orderTx, orderRx, localID)
+		peerUpdateCh, peerTxEnable, elevInfoTx, elevInfoRx, orderTx, orderRx, id)
 
 	select {}
 

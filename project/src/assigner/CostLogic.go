@@ -6,7 +6,6 @@ import (
 	def "../definitions"
 	"../driver/elevio"
 	elevtr "../elevtracker"
-	q "../queue"
 )
 
 type costMsg struct {
@@ -72,8 +71,5 @@ func ChooseCheapestElevator(ordBtn elevio.ButtonEvent) def.ElevInfo {
 			return value
 		}
 	}
-
-	tempElev := bestElev
-	bestElev.QueueMat = q.AddToQueue(tempElev.QueueMat, ordBtn)
 	return bestElev
 }
