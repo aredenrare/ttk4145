@@ -2,7 +2,7 @@ DOCKER = eirare
 
 .PHONY: build
 build:
-	CGO_ENABLE=0 GOOS=linux GOARCH=arm go build -o ./bin/elevator ./src/*.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./bin/elevator ./src/*.go
 
 PHONY: create-docker
 create-docker:

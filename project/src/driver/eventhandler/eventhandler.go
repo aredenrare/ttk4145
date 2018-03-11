@@ -30,7 +30,6 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 	var doorTimeout <-chan time.Time
 	heartBeat := time.Tick(def.HeartBeatTime)
 
-	elevio.Init("localhost:15657", def.NumFloors)
 	var d elevio.MotorDirection = elevio.MD_Down
 	var tempDir elevio.MotorDirection
 	var tempMat def.QueueMatrix
@@ -50,6 +49,8 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 	}
 
 	for {
+		// Prevents the elevator from moving while the door is open
+		// if doors not open, it chooses direction depending on its orders
 		if doorOpen {
 			tempDir = elevio.MD_Stop
 		} else {
@@ -60,13 +61,21 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 		curState.Dir = d
 
 		select {
-		// An order is noticed
+		// An order is noticed on this elevator
 		case btn := <-drv_buttons:
-			if btn.Button == elevio.BT_Cab {
+			// standing still at ordered floor, complete order
+			if curState.Dir == elevio.MD_Stop && curState.PrevFloor == btn.Floor {
+				tempMat = curState.QueueMat
+				elevio.SetButtonLamp(btn.Button, btn.Floor, false)
+				doorOpen = true
+				elevio.SetDoorOpenLamp(doorOpen)
+				doorTimeout = time.After(def.DoorOpenTime)
+
+			} else if btn.Button == elevio.BT_Cab { // deal with cab calls
 				tempMat = curState.QueueMat
 				curState.QueueMat = q.AddToQueue(tempMat, btn)
 				elevio.SetButtonLamp(btn.Button, btn.Floor, true)
-			} else {
+			} else { // a Hall call is assigned to Cheapest elevator
 				tempElev = cost.ChooseCheapestElevator(btn)
 				tempMat = q.AddToQueue(tempElev.QueueMat, btn)
 				tempElev.QueueMat = tempMat
@@ -78,21 +87,22 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 		case flr := <-drv_floors:
 			curState.PrevFloor = flr
 			elevio.SetFloorIndicator(flr)
+			// the elevator should stop and complete order
 			if q.ShouldStop(curState.QueueMat, flr, d) {
 				tempDir = elevio.MD_Stop
 				tempMat = q.ClearAtCurrentFloor(curState.QueueMat, flr, d)
 				curState.QueueMat = tempMat
+				q.PrintQueue(curState.QueueMat)
 				doorOpen = true
 				elevio.SetDoorOpenLamp(doorOpen)
 				doorTimeout = time.After(def.DoorOpenTime)
-				// q.PrintQueue(curState.QueueMat)
-			} else {
+			} else { // elevator should continue its journey (not stopping believing)
 				tempDir = q.ChooseDirection(curState.QueueMat, flr, d)
 			}
 			d = tempDir
 			elevio.SetMotorDirection(d)
 			curState.Dir = d
-
+		// closes door after timeout
 		case <-doorTimeout:
 			doorOpen = false
 			elevio.SetDoorOpenLamp(doorOpen)
@@ -116,6 +126,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 				}
 			}
 			curState.QueueMat = q.InitQueue()
+		// peers are added or lost from the network
 		case pUpdt := <-peerUpdateCh:
 			fmt.Printf("Peer update:\n")
 			fmt.Printf("  Peers:    %q\n", pUpdt.Peers)
@@ -126,20 +137,30 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			} else {
 				elevtr.RemoveFromMap(pUpdt)
 			}
-
+		// The elevator receives a state update from other elevators on the network
 		case msgRec := <-elevInfoRx:
 			elevtr.UpdateMap(msgRec)
-
+		// an order is received and the elevator checks if it should take it
 		case ordRec := <-orderRx:
-			// fmt.Println("received order")
 			if ordRec.State.ID == id {
 				tempMat = q.AddOrdersToCurrentQueue(curState.QueueMat, ordRec.State.QueueMat)
 				curState.QueueMat = tempMat
-				q.PrintQueue(curState.QueueMat)
+				// resolves orders at the elevators current floor, opens door
+				for btn := 0; btn < def.NumButtons; btn++ {
+					if curState.QueueMat.Matrix[curState.PrevFloor][btn] && curState.Dir == elevio.MD_Stop {
+						fmt.Printf("order at elevs floor standing still\n")
+						curState.QueueMat.Matrix[curState.PrevFloor][btn] = false
+						doorOpen = true
+						elevio.SetDoorOpenLamp(doorOpen)
+						doorTimeout = time.After(def.DoorOpenTime)
+					}
+				}
 			}
+		// Update the elevators state to the network
 		case <-heartBeat:
 			TrState := def.Message{ID: "", State: curState}
 			elevInfoTx <- TrState
+			elevtr.ResetEmptyHallCalls()
 		}
 	}
 }

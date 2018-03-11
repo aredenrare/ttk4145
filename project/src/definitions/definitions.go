@@ -30,4 +30,4 @@ const NumButtons = 3
 const NumFloors = 4
 
 var DoorOpenTime = time.Second * 2
-var HeartBeatTime = time.Millisecond * 200
+var HeartBeatTime = time.Millisecond * 50

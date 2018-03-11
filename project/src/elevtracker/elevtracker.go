@@ -9,8 +9,6 @@ import (
 
 var ElevMap def.ElevMap
 
-// ElevMap = make(map[strinf]def.ElevInfo)
-
 func InitMap(peer peers.PeerUpdate) {
 	// tempMap := make(map[string]def.ElevInfo)
 	ElevMap = make(def.ElevMap)
@@ -39,4 +37,30 @@ func CheckEmptyMap() bool {
 		return true
 	}
 	return false
+}
+
+func ResetEmptyHallCalls() {
+	for flr := 0; flr < def.NumFloors; flr++ {
+		for btn := 0; btn < def.NumButtons-1; btn++ {
+			isOrder := false
+			tempBtn := elevio.ButtonType(btn)
+			tempButton := elevio.ButtonEvent{Floor: flr, Button: tempBtn}
+			for _, value := range ElevMap {
+				if value.QueueMat.Matrix[flr][btn] {
+					isOrder = true
+				}
+			}
+			elevio.SetButtonLamp(tempButton.Button, tempButton.Floor, isOrder)
+		}
+	}
+}
+
+func SetDoorLampHallCalls(button elevio.ButtonEvent) bool {
+	isStoppedAtFloor := false
+	for _, value := range ElevMap {
+		if value.PrevFloor == button.Floor && value.Dir == elevio.MD_Stop {
+			isStoppedAtFloor = true
+		}
+	}
+	return isStoppedAtFloor
 }

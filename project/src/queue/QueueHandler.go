@@ -7,10 +7,6 @@ import (
 	elevio "../driver/elevio"
 )
 
-//type QueueMatrix struct {
-//	Matrix [def.NumFloors][def.NumButtons]bool
-//}
-
 var queue def.QueueMatrix
 
 func InitQueue() def.QueueMatrix {
@@ -33,8 +29,8 @@ func RemoveFromQueue(queueMat def.QueueMatrix, floor int, button elevio.ButtonTy
 	temp := queueMat
 	temp.Matrix[floor][int(button)] = false
 	// Skru av lys (fjernes?)
-	newButton := elevio.ButtonEvent{Floor: floor, Button: button}
-	elevio.SetButtonLamp(newButton.Button, newButton.Floor, false)
+	tempButton := elevio.ButtonEvent{Floor: floor, Button: button}
+	elevio.SetButtonLamp(tempButton.Button, tempButton.Floor, false)
 	return temp
 }
 
@@ -62,13 +58,22 @@ func AddOrdersToCurrentQueue(queueMat def.QueueMatrix, orderMat def.QueueMatrix)
 	temp := queueMat
 	for flr := 0; flr < def.NumFloors; flr++ {
 		for btn := 0; btn < def.NumButtons; btn++ {
-			tempBtn := elevio.ButtonType(btn)
-			tempButton := elevio.ButtonEvent{Floor: flr, Button: tempBtn}
 			if orderMat.Matrix[flr][btn] == true {
 				temp.Matrix[flr][btn] = true
-				elevio.SetButtonLamp(tempButton.Button, tempButton.Floor, true)
 			}
 		}
 	}
 	return temp
+}
+
+func SetHallLampsInQueue(queueMat def.QueueMatrix) {
+	for flr := 0; flr < def.NumFloors; flr++ {
+		for btn := 0; btn < def.NumButtons-1; btn++ {
+			tempBtn := elevio.ButtonType(btn)
+			tempButton := elevio.ButtonEvent{Floor: flr, Button: tempBtn}
+			if queueMat.Matrix[flr][btn] {
+				elevio.SetButtonLamp(tempButton.Button, tempButton.Floor, true)
+			}
+		}
+	}
 }

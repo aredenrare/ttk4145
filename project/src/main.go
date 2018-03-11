@@ -13,7 +13,18 @@ import (
 	evhandler "./driver/eventhandler"
 )
 
+var elevatorPort1 int
+var elevatorPort2 int
+var elevatorPort3 int
+var simulatorPort string
+
 func main() {
+	flag.IntVar(&elevatorPort1, "port1", 30001, "port for peers")
+	flag.IntVar(&elevatorPort2, "port2", 31001, "port for elevinfo")
+	flag.IntVar(&elevatorPort3, "port3", 32001, "port for orders")
+	flag.StringVar(&simulatorPort, "simulator", "localhost:15657", "address of simulator")
+	flag.Parse()
+
 	var id string
 	flag.StringVar(&id, "id", "", "id of this peer")
 	flag.Parse()
@@ -41,6 +52,9 @@ func main() {
 	// orders
 	orderTx := make(chan def.Message)
 	orderRx := make(chan def.Message)
+
+	elevio.Init(simulatorPort, def.NumFloors)
+
 	// driver routines
 	go elevio.PollButtons(drv_buttons)
 	go elevio.PollFloorSensor(drv_floors)

@@ -55,6 +55,9 @@ func ShouldStop(queueMat def.QueueMatrix, floor int, dir elevio.MotorDirection) 
 	case elevio.MD_Up:
 		return queueMat.Matrix[floor][elevio.BT_HallUp] ||
 			queueMat.Matrix[floor][elevio.BT_Cab] || !RequestAbove(queueMat, floor)
+	case elevio.MD_Stop:
+		return queueMat.Matrix[floor][elevio.BT_HallDown] ||
+			queueMat.Matrix[floor][elevio.BT_Cab] || queueMat.Matrix[floor][elevio.BT_HallUp]
 	}
 	return false
 }

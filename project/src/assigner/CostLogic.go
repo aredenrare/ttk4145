@@ -1,8 +1,6 @@
 package costlogic
 
 import (
-	"fmt"
-
 	def "../definitions"
 	"../driver/elevio"
 	elevtr "../elevtracker"
@@ -52,7 +50,6 @@ func CalculateCost(curState def.ElevInfo, ordBtn elevio.ButtonEvent) int {
 			totCost++
 		}
 	}
-	fmt.Println("Cost = ", totCost)
 	return totCost
 }
 
@@ -60,7 +57,6 @@ func ChooseCheapestElevator(ordBtn elevio.ButtonEvent) def.ElevInfo {
 	lowestCost := 1000000
 	var bestElev def.ElevInfo
 	var curCost int
-	fmt.Printf("len(map) = %+v\n", len(elevtr.ElevMap))
 	for _, value := range elevtr.ElevMap {
 		curCost = CalculateCost(value, ordBtn)
 		if curCost < lowestCost {
