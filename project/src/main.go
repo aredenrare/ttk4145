@@ -32,11 +32,10 @@ func main() {
 	drv_floors := make(chan int)
 	drv_obstr := make(chan bool)
 	drv_stop := make(chan bool)
-	// Network channels
-	// peer check
+	// Peer check
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	peerTxEnable := make(chan bool)
-	// messages
+	// heartbeat
 	elevInfoTx := make(chan def.Message)
 	elevInfoRx := make(chan def.Message)
 	// orders

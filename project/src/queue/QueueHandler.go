@@ -26,8 +26,6 @@ func InitQueue() def.QueueMatrix {
 func AddToQueue(queueMat def.QueueMatrix, button elevio.ButtonEvent) def.QueueMatrix {
 	temp := queueMat
 	temp.Matrix[button.Floor][button.Button] = true
-	// Skru på lys (fjernes?)
-	elevio.SetButtonLamp(button.Button, button.Floor, true)
 	return temp
 }
 
@@ -68,7 +66,7 @@ func AddOrdersToCurrentQueue(queueMat def.QueueMatrix, orderMat def.QueueMatrix)
 			tempButton := elevio.ButtonEvent{Floor: flr, Button: tempBtn}
 			if orderMat.Matrix[flr][btn] == true {
 				temp.Matrix[flr][btn] = true
-				elevio.SetButtonLamp(tempButton.Button, tempButton.Floor, false)
+				elevio.SetButtonLamp(tempButton.Button, tempButton.Floor, true)
 			}
 		}
 	}

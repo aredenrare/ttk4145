@@ -65,6 +65,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			if btn.Button == elevio.BT_Cab {
 				tempMat = curState.QueueMat
 				curState.QueueMat = q.AddToQueue(tempMat, btn)
+				elevio.SetButtonLamp(btn.Button, btn.Floor, true)
 			} else {
 				tempElev = cost.ChooseCheapestElevator(btn)
 				tempMat = q.AddToQueue(tempElev.QueueMat, btn)
