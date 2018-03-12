@@ -126,6 +126,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 				}
 			}
 			curState.QueueMat = q.InitQueue()
+
 		// peers are added or lost from the network
 		case pUpdt := <-peerUpdateCh:
 			fmt.Printf("Peer update:\n")
@@ -137,6 +138,26 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			} else {
 				elevtr.RemoveFromMap(pUpdt)
 			}
+
+// Last modification
+			// If an elevator is lost from the network, this elevators takes its hall calls
+			// Implicit -> all other elevators takes its calls
+			if len(pUdt.Lost) != 0 {
+				tempMat = q.AddOrdersToCurrentQueue(curState.QueueMat, ordRec.State.QueueMat)
+				curState.QueueMat = tempMat
+				// resolves orders at elevators current floor, opens door
+				for btn := 0; btn < def.NumButtons; btn++ {
+					if curState.QueueMat.Matrix[curState.PrevFloor][btn] && curState.Dir == elevio.MD_Stop {
+						fmt.Printf("order at elevs floor standing still\n")
+						curState.QueueMat.Matrix[curState.PrevFloor][btn] = false
+						doorOpen = true
+						elevio.SetDoorOpenLamp(doorOpen)
+						doorTimeout = time.After(def.DoorOpenTime)
+					}
+				}	
+			}
+// End last modification
+
 		// The elevator receives a state update from other elevators on the network
 		case msgRec := <-elevInfoRx:
 			elevtr.UpdateMap(msgRec)
