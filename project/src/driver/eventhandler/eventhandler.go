@@ -8,7 +8,6 @@ import (
 	peers "../../network/peers"
 
 	cost "../../assigner"
-	backup "../../backup/"
 	def "../../definitions"
 	elevtr "../../elevtracker"
 	q "../../queue"
@@ -31,7 +30,6 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 
 	elevtr.InitializeElevTracker()
 	// creates a backup file on disk
-	backup.InitFile()
 	var doorTimeout <-chan time.Time
 	heartBeat := time.Tick(def.HeartBeatTime)
 
@@ -136,10 +134,8 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 
 			// Stop triggered
 		case stop := <-drv_stop:
-			if !stop {
-				initFlag = false
-			}
-
+			fmt.Println(stop)
+			initFlag = false
 		// peers are added or lost from the network
 		case pUpdt := <-peerUpdateCh:
 			fmt.Printf("Peer update:\n")
