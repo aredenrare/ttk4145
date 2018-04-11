@@ -22,7 +22,3 @@ func Init(floor int) bool {
 	}
 	return initFlag
 }
-
-func DoorOpen(isDoorOpen bool) {
-	elevio.SetDoorOpenLamp(isDoorOpen)
-}

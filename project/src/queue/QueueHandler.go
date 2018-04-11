@@ -57,7 +57,7 @@ func CheckInQueue(queueMat def.QueueMatrix, floor int, button elevio.ButtonType)
 func AddOrdersToCurrentQueue(queueMat def.QueueMatrix, orderMat def.QueueMatrix) def.QueueMatrix {
 	temp := queueMat
 	for flr := 0; flr < def.NumFloors; flr++ {
-		for btn := 0; btn < def.NumButtons; btn++ {
+		for btn := 0; btn < def.NumButtons-1; btn++ {
 			if orderMat.Matrix[flr][btn] == true {
 				temp.Matrix[flr][btn] = true
 			}

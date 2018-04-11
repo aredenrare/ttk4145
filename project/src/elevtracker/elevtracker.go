@@ -9,23 +9,30 @@ import (
 
 var ElevMap def.ElevMap
 
+func InitializeElevTracker() {
+	ElevMap = make(def.ElevMap)
+}
+
 func InitMap(peer peers.PeerUpdate) {
 	// tempMap := make(map[string]def.ElevInfo)
-	ElevMap = make(def.ElevMap)
 	initMat := q.InitQueue()
 	initState := def.ElevInfo{ID: peer.New, PrevFloor: 0, Dir: elevio.MD_Stop, QueueMat: initMat}
 	ElevMap[peer.New] = initState
 }
 
 func RemoveFromMap(peer peers.PeerUpdate) {
-	numLost := len(peer.Lost)
-	for key := range ElevMap {
-		for i := 0; i < numLost; i++ {
-			if key == peer.Lost[i] {
-				delete(ElevMap, key)
-			}
-		}
+
+	for _, lost := range peer.Lost {
+		delete(ElevMap, lost)
 	}
+	// numLost := len(peer.Lost)
+	// for key := range ElevMap {
+	// 	for i := 0; i < numLost; i++ {
+	// 		if key == peer.Lost[i] {
+	// 			delete(ElevMap, key)
+	// 		}
+	// 	}
+	// }
 }
 
 func UpdateMap(message def.Message) {
@@ -55,6 +62,16 @@ func ResetEmptyHallCalls() {
 	}
 }
 
+func ResetAllLamps() {
+	for flr := 0; flr < def.NumFloors; flr++ {
+		for btn := 0; btn < def.NumButtons; btn++ {
+			tempBtn := elevio.ButtonType(btn)
+			tempButton := elevio.ButtonEvent{Floor: flr, Button: tempBtn}
+			elevio.SetButtonLamp(tempButton.Button, tempButton.Floor, false)
+		}
+	}
+}
+
 func SetDoorLampHallCalls(button elevio.ButtonEvent) bool {
 	isStoppedAtFloor := false
 	for _, value := range ElevMap {
@@ -64,24 +81,3 @@ func SetDoorLampHallCalls(button elevio.ButtonEvent) bool {
 	}
 	return isStoppedAtFloor
 }
-
-/*
-func ResolveLostPeersFromMap(pUpdt peers.PeerUpdate, i int, curState def.ElevInfo) {
-	for key, value := range ElevMap {
-		if key == pUpdt.Lost[i] {
-			// adding the lost elevator orders to this elevators queue matrix
-			tempMat := q.AddOrdersToCurrentQueue(curState.QueueMat, value.State.QueueMat)
-			curState.QueueMat = tempMat
-			for btn := 0; btn < def.NumButtons; btn++ {
-				// resolves orders that are on this elevators floor if it stands still
-				if curState.QueueMat.Matrix[curState.PrevFloor][btn] && curState.Dir == elevio.MD_Stop {
-					curState.QueueMat.Matrix[curState.PrevFloor][btn] = false
-					doorOpen = true
-					elevio.SetDoorOpenLamp(doorOpen)
-					doorTimeout = time.After(def.DoorOpenTime)
-				}
-			}
-		}
-	}
-}
-*/

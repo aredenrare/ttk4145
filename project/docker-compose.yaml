@@ -5,18 +5,27 @@ services:
       - simulator1
     image: eirare:latest
     entrypoint: 
-      - "./elevator"
-      - "--simulator"
-      - "simulator1:15657"
+      - "sh"
+      - "-c"
+      - "sleep 1d"
     restart: "no"
   elevator2:
     depends_on: 
       - simulator2
     image: eirare:latest
     entrypoint: 
-      - "./elevator"
-      - "--simulator"
-      - "simulator2:15657"
+      - "sh"
+      - "-c"
+      - "sleep 1d"
+    restart: "no"
+  elevator3:
+    depends_on: 
+      - simulator3
+    image: eirare:latest
+    entrypoint: 
+      - "sh"
+      - "-c"
+      - "sleep 1d"
     restart: "no"
   simulator1:
     image: mazzus/graphical-elevator-simulator
@@ -40,3 +49,14 @@ services:
     restart: "no"
     ports:
       - 3002:3001
+  simulator3:
+    image: mazzus/graphical-elevator-simulator
+    entrypoint:
+      - "./elevator-simulator"
+      - "-l"
+      - "ERROR"
+      - "-p"
+      - "20"
+    restart: "no"
+    ports:
+      - 3003:3001
