@@ -6,9 +6,8 @@ import (
 	elevio "../driver/elevio"
 )
 
-// Flyttet denne hit for å ha den med i ElevInfo structen
 type QueueMatrix struct {
-	Matrix [NumFloors][NumButtons]bool
+	Matrix [NumFloors][NumButtons]bool `json:"tempMat"`
 }
 
 type ElevInfo struct {
@@ -31,3 +30,5 @@ const NumFloors = 4
 
 var DoorOpenTime = time.Second * 2
 var HeartBeatTime = time.Millisecond * 50
+
+const FILE_NAME = "backup.txt"

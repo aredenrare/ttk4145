@@ -8,6 +8,7 @@ import (
 	peers "../../network/peers"
 
 	cost "../../assigner"
+	backup "../../backup/"
 	def "../../definitions"
 	elevtr "../../elevtracker"
 	q "../../queue"
@@ -17,6 +18,11 @@ import (
 var curState def.ElevInfo
 var initFlag bool = false
 var doorOpen = false
+var redundancyFlag = false
+
+// This variable is used to avoid the same order to be calculated in the costfunction
+// if one button is pressed multiple times
+var lastBtn = elevio.ButtonEvent{Floor: 0, Button: elevio.BT_HallDown}
 
 func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan int, drv_obstr <-chan bool,
 	drv_stop <-chan bool, peerUpdateCh <-chan peers.PeerUpdate, peerTxEnable chan<- bool,
@@ -24,7 +30,8 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 	orderRx <-chan def.Message, id string) {
 
 	elevtr.InitializeElevTracker()
-
+	// creates a backup file on disk
+	backup.InitFile()
 	var doorTimeout <-chan time.Time
 	heartBeat := time.Tick(def.HeartBeatTime)
 
@@ -48,9 +55,8 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 				curState.Dir = elevio.MD_Stop
 				curState.QueueMat = q.InitQueue()
 				if initFlag {
-					// add cab calls from disk to current queuematrix
+					// read cab calls from disk, add to queuematrix
 				}
-
 			}
 		}
 		// Prevents the elevator from moving while the door is open
@@ -67,6 +73,9 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 		select {
 		// An order is noticed on this elevator
 		case btn := <-drv_buttons:
+			if !redundancyFlag {
+				break
+			}
 			// standing still at ordered floor, complete order
 			if curState.Dir == elevio.MD_Stop && curState.PrevFloor == btn.Floor {
 				tempMat = curState.QueueMat
@@ -75,18 +84,22 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 				elevio.SetDoorOpenLamp(doorOpen)
 				doorTimeout = time.After(def.DoorOpenTime)
 
-			} else if btn.Button == elevio.BT_Cab { // deal with cab calls
-				// write new cab calls to disk
+			} else if btn.Button == elevio.BT_Cab { // deal with cab call
 				tempMat = curState.QueueMat
 				curState.QueueMat = q.AddToQueue(tempMat, btn)
 				elevio.SetButtonLamp(btn.Button, btn.Floor, true)
+
 			} else { // a Hall call is assigned to Cheapest elevator
-				tempElev = cost.ChooseCheapestElevator(btn)
-				tempMat = q.AddToQueue(tempElev.QueueMat, btn)
-				tempElev.QueueMat = tempMat
-				TrOrder := def.Message{ID: "", State: tempElev}
-				orderTx <- TrOrder
+				if lastBtn != btn {
+					tempElev = cost.ChooseCheapestElevator(btn)
+					tempMat = q.AddToQueue(tempElev.QueueMat, btn)
+					tempElev.QueueMat = tempMat
+					TrOrder := def.Message{ID: "", State: tempElev}
+					orderTx <- TrOrder
+				}
+
 			}
+			lastBtn = btn
 
 		// A floor is reached
 		case flr := <-drv_floors:
@@ -94,7 +107,6 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			elevio.SetFloorIndicator(flr)
 			// the elevator should stop and complete order
 			if q.ShouldStop(curState.QueueMat, flr, dir) {
-				// if a cab call is cleared, update the file on disk
 				tempDir = elevio.MD_Stop
 				tempMat = q.ClearAtCurrentFloor(curState.QueueMat, flr, dir)
 				curState.QueueMat = tempMat
@@ -134,7 +146,12 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			fmt.Printf("  Peers:    %q\n", pUpdt.Peers)
 			fmt.Printf("  New:      %q\n", pUpdt.New)
 			fmt.Printf("  Lost:     %q\n", pUpdt.Lost)
-
+			fmt.Printf("num peers: %+v\n", len(pUpdt.Peers))
+			if len(pUpdt.Peers) > 1 {
+				redundancyFlag = true
+			} else {
+				redundancyFlag = false
+			}
 			// If an elevator is lost from the network, this elevators takes its hall calls
 			// Implicit -> all other elevators takes its calls
 			if len(pUpdt.Lost) != 0 {

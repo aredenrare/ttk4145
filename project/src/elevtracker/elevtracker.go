@@ -21,18 +21,9 @@ func InitMap(peer peers.PeerUpdate) {
 }
 
 func RemoveFromMap(peer peers.PeerUpdate) {
-
 	for _, lost := range peer.Lost {
 		delete(ElevMap, lost)
 	}
-	// numLost := len(peer.Lost)
-	// for key := range ElevMap {
-	// 	for i := 0; i < numLost; i++ {
-	// 		if key == peer.Lost[i] {
-	// 			delete(ElevMap, key)
-	// 		}
-	// 	}
-	// }
 }
 
 func UpdateMap(message def.Message) {
