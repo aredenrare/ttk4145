@@ -134,34 +134,34 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			fmt.Printf("  New:      %q\n", pUpdt.New)
 			fmt.Printf("  Lost:     %q\n", pUpdt.Lost)
 
-// Begin Last modification
+			// Begin Last modification
 
 			// If an elevator is lost from the network, this elevators takes its hall calls
 			// Implicit -> all other elevators takes its calls
 			if len(pUdt.Lost) != 0 {
 				// a lost elevators is detected
-				for i:=0; i<len(pUdt.Lost); i++{
+				for i := 0; i < len(pUdt.Lost); i++ {
 					// finding the elevator(s) that are lost in the map
-					for key, value := range(){
+					for key, value := range elevtr.ElevMap {
 						// comparing the lost elevators ID with IDs from the keys in the map
-						if key == pUpdt.Lost[i]{
+						if key == pUpdt.Lost[i] {
 							// adding the lost elevator orders to this elevators queue matrix
 							tempMat = q.AddOrdersToCurrentQueue(curState.QueueMat, value.State.QueueMat)
 							curState.QueueMat = tempMat
 							for btn := 0; btn < def.NumButtons; btn++ {
 								// resolves orders that are on this elevators floor if it stands still
 								if curState.QueueMat.Matrix[curState.PrevFloor][btn] && curState.Dir == elevio.MD_Stop {
-								curState.QueueMat.Matrix[curState.PrevFloor][btn] = false
-								doorOpen = true
-								elevio.SetDoorOpenLamp(doorOpen)
-								doorTimeout = time.After(def.DoorOpenTime)
+									curState.QueueMat.Matrix[curState.PrevFloor][btn] = false
+									doorOpen = true
+									elevio.SetDoorOpenLamp(doorOpen)
+									doorTimeout = time.After(def.DoorOpenTime)
 								}
 							}
 						}
 					}
-				}	
+				}
 			}
-// End last modification
+			// End last modification
 
 			if elevtr.CheckEmptyMap() {
 				elevtr.InitMap(pUpdt)

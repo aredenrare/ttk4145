@@ -64,3 +64,24 @@ func SetDoorLampHallCalls(button elevio.ButtonEvent) bool {
 	}
 	return isStoppedAtFloor
 }
+
+/*
+func ResolveLostPeersFromMap(pUpdt peers.PeerUpdate, i int, curState def.ElevInfo) {
+	for key, value := range ElevMap {
+		if key == pUpdt.Lost[i] {
+			// adding the lost elevator orders to this elevators queue matrix
+			tempMat := q.AddOrdersToCurrentQueue(curState.QueueMat, value.State.QueueMat)
+			curState.QueueMat = tempMat
+			for btn := 0; btn < def.NumButtons; btn++ {
+				// resolves orders that are on this elevators floor if it stands still
+				if curState.QueueMat.Matrix[curState.PrevFloor][btn] && curState.Dir == elevio.MD_Stop {
+					curState.QueueMat.Matrix[curState.PrevFloor][btn] = false
+					doorOpen = true
+					elevio.SetDoorOpenLamp(doorOpen)
+					doorTimeout = time.After(def.DoorOpenTime)
+				}
+			}
+		}
+	}
+}
+*/
