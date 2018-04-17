@@ -17,7 +17,7 @@ import (
 var curState def.ElevInfo
 var initFlag bool = false
 var doorOpen = false
-var redundancyFlag = false
+//var redundancyFlag = false
 
 // This variable is used to avoid the same order to be calculated in the costfunction
 // if one button is pressed multiple times
@@ -52,6 +52,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 				curState.PrevFloor = 0
 				curState.Dir = elevio.MD_Stop
 				curState.QueueMat = q.InitQueue()
+				curState.Alive = true
 				if initFlag {
 					// read cab calls from disk, add to queuematrix
 				}
@@ -71,9 +72,11 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 		select {
 		// An order is noticed on this elevator
 		case btn := <-drv_buttons:
-			if !redundancyFlag {
-				break
-			}
+			
+			//if !redundancyFlag {
+			//	break
+			//}
+
 			// standing still at ordered floor, complete order
 			if curState.Dir == elevio.MD_Stop && curState.PrevFloor == btn.Floor {
 				tempMat = curState.QueueMat
@@ -81,6 +84,8 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 				doorOpen = true
 				elevio.SetDoorOpenLamp(doorOpen)
 				doorTimeout = time.After(def.DoorOpenTime)
+				OrderTimeOut = time.After(def.OrderTime)
+				curState.Alive = true
 
 			} else if btn.Button == elevio.BT_Cab { // deal with cab call
 				tempMat = curState.QueueMat
@@ -111,6 +116,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 				elevio.SetDoorOpenLamp(doorOpen)
 				doorTimeout = time.After(def.DoorOpenTime)
 				OrderTimeOut = time.After(def.OrderTime)
+				curState.Alive = true
 			} else { // elevator should continue its journey (not stopping believing)
 				tempDir = q.ChooseDirection(curState.QueueMat, flr, dir)
 			}
@@ -143,11 +149,11 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			fmt.Printf("  New:      %q\n", pUpdt.New)
 			fmt.Printf("  Lost:     %q\n", pUpdt.Lost)
 			fmt.Printf("num peers: %+v\n", len(pUpdt.Peers))
-			if len(pUpdt.Peers) > 1 {
-				redundancyFlag = true
-			} else {
-				redundancyFlag = false
-			}
+			//if len(pUpdt.Peers) > 1 {
+				//redundancyFlag = true
+			//} else {
+				//redundancyFlag = false
+			//}
 			// If an elevator is lost from the network, this elevators takes its hall calls
 			// Implicit -> all other elevators takes its calls
 			if len(pUpdt.Lost) != 0 {
@@ -167,6 +173,8 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 									doorOpen = true
 									elevio.SetDoorOpenLamp(doorOpen)
 									doorTimeout = time.After(def.DoorOpenTime)
+									OrderTimeOut = time.After(def.OrderTime)
+									curState.Alive = true
 								}
 							}
 						}
@@ -183,6 +191,26 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 		// The elevator receives a state update from other elevators on the network
 		case msgRec := <-elevInfoRx:
 			elevtr.UpdateMap(msgRec)
+			// Checks if some elevators on the network has timed out and can not be considered alive
+			// This elevator (implicit all other elevators alive) will then copy its hall calls and add them to its own queue matrix
+			for _, value := range elevtr.ElevMap {
+				if value.Alive != true && curState.Alive == true {
+					// adding the lost elevator orders to this elevators queue matrix
+					tempMat = q.AddOrdersToCurrentQueue(curState.QueueMat, value.QueueMat)
+					curState.QueueMat = tempMat
+					for btn := 0; btn < def.NumButtons; btn++ {
+						// resolves orders that are on this elevators floor if it stands still
+						if curState.QueueMat.Matrix[curState.PrevFloor][btn] && curState.Dir == elevio.MD_Stop {
+							curState.QueueMat.Matrix[curState.PrevFloor][btn] = false
+							doorOpen = true
+							elevio.SetDoorOpenLamp(doorOpen)
+							doorTimeout = time.After(def.DoorOpenTime)
+							OrderTimeOut = time.After(def.OrderTime)
+							curState.Alive = true
+						}
+					}
+				}
+			}
 		// an order is received and the elevator checks if it should take it
 		case ordRec := <-orderRx:
 			if ordRec.State.ID == id {
@@ -196,6 +224,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 						elevio.SetDoorOpenLamp(doorOpen)
 						doorTimeout = time.After(def.DoorOpenTime)
 						OrderTimeOut = time.After(def.OrderTime)
+						curState.Alive = true
 					}
 				}
 			}
@@ -206,9 +235,14 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			elevtr.ResetEmptyHallCalls()
 			if q.CheckEmptyQueue(curState.QueueMat){
 				OrderTimeOut = time.After(def.OrderTime)
+				curState.Alive = true
 			}
+		// The elevator has orders it has not resolved within the OrderTime time limit
 		case <- OrderTimeOut:
-			
+			curState.Alive = false
+			initFlag = false
+			fmt.Println("Elevator has timed out, the elevator will initialize when back")
+
 		}
 	}
 }

@@ -15,6 +15,7 @@ type ElevInfo struct {
 	PrevFloor int
 	Dir       elevio.MotorDirection
 	QueueMat  QueueMatrix
+	Alive	  bool
 }
 type Message struct {
 	ID    string
@@ -30,6 +31,6 @@ const NumFloors = 4
 
 var DoorOpenTime = time.Second * 2
 var HeartBeatTime = time.Millisecond * 50
-var OrderTime = time.Second * 30
+var OrderTime = time.Second * 15
 
 const FILE_NAME = "backup.txt"
