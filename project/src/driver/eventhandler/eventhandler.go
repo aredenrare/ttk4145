@@ -46,6 +46,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			dir = elevio.MD_Down
 			elevio.SetMotorDirection(dir)
 			doorOpen = false
+			elevio.SetDoorOpenLamp(doorOpen)
 			elevtr.ResetAllLamps()
 			if curState.Alive != true {
 				curState.PrevFloor = -1
@@ -53,14 +54,13 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			select {
 			case a := <-drv_floors:
 				elevio.SetFloorIndicator(a)
-				//initFlag = Init(a)
 				
 				if a == 0{
 					elevio.SetMotorDirection(elevio.MD_Stop)
 					curState.Dir = elevio.MD_Stop
 					curState.ID, _ = ip.LocalIP()
 					curState.PrevFloor = 0
-					curState.QueueMat = q.InitQueue()
+					//curState.QueueMat = q.InitQueue()
 					initFlag = true
 					fmt.Println("Initialized")
 				}
@@ -199,6 +199,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			if pUpdt.New != "" {
 				for key, value := range elevtr.ElevMap {
 					if curState.ID == pUpdt.New && curState.ID == key{
+						fmt.Println("Found my old queue")
 						tempMat = q.AddCabCallsToCurrentQueue(curState.QueueMat,value.QueueMat)
 						curState.QueueMat = tempMat
 						curState.Alive = true
