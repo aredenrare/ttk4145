@@ -199,7 +199,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			if pUpdt.New != "" {
 				for key, value := range elevtr.ElevMap {
 					if curState.ID == pUpdt.New && curState.ID == key{
-						tempMat = q.AddOrdersToCurrentQueue(curState.QueueMat,value.QueueMat)
+						tempMat = q.AddCabCallsToCurrentQueue(curState.QueueMat,value.QueueMat)
 						curState.QueueMat = tempMat
 						curState.Alive = true
 					}

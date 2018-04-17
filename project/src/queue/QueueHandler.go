@@ -65,6 +65,16 @@ func AddOrdersToCurrentQueue(queueMat def.QueueMatrix, orderMat def.QueueMatrix)
 	}
 	return temp
 }
+func AddCabCallsToCurrentQueue(queueMat def.QueueMatrix, orderMat def.QueueMatrix) def.QueueMatrix {
+	temp := queueMat
+	for flr := 0; flr < def.NumFloors; flr++ {
+		btn := def.NumButtons
+		if orderMat.Matrix[flr][btn] == true {
+			temp.Matrix[flr][btn] = true
+		}
+	}
+	return temp
+}
 
 func SetHallLampsInQueue(queueMat def.QueueMatrix) {
 	for flr := 0; flr < def.NumFloors; flr++ {
