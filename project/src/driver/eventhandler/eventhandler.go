@@ -45,6 +45,9 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 		for !initFlag {
 			doorOpen = false
 			elevtr.ResetAllLamps()
+			if curState.Alive != true {
+				curState.PrevFloor = -1
+			}
 			select {
 			case a := <-drv_floors:
 				initFlag = Init(a)
@@ -54,9 +57,9 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 					curState.PrevFloor = 0
 					curState.Dir = elevio.MD_Stop
 					curState.QueueMat = q.InitQueue()
-					curState.Alive = true
 				}
-				if initFlag {
+				if initFlag && curState.PrevFloor == 0{
+					curState.Alive = true
 				}
 			}
 		}
@@ -242,8 +245,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 		// The elevator has orders it has not resolved within the OrderTime time limit
 		case <- OrderTimeOut:
 			curState.Alive = false
-			curState.QueueMat = q.InitQueue()
-			//initFlag = false
+			initFlag = false
 			fmt.Println("Elevator has timed out, the elevator will initialize when back")
 
 		}
