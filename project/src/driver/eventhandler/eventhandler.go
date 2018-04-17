@@ -21,7 +21,7 @@ var redundancyFlag = false
 
 // This variable is used to avoid the same order to be calculated in the costfunction
 // if one button is pressed multiple times
-var lastBtn = elevio.ButtonEvent{Floor: 0, Button: elevio.BT_HallDown}
+// var lastBtn = elevio.ButtonEvent{Floor: 0, Button: elevio.BT_HallDown}
 
 func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan int, drv_obstr <-chan bool,
 	drv_stop <-chan bool, peerUpdateCh <-chan peers.PeerUpdate, peerTxEnable chan<- bool,
@@ -88,7 +88,8 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 				elevio.SetButtonLamp(btn.Button, btn.Floor, true)
 
 			} else { // a Hall call is assigned to Cheapest elevator
-				if lastBtn != btn {
+				//if lastBtn != btn {
+					if !elevtr.CheckIfOrderTaken(btn) {
 					tempElev = cost.ChooseCheapestElevator(btn)
 					tempMat = q.AddToQueue(tempElev.QueueMat, btn)
 					tempElev.QueueMat = tempMat
@@ -97,7 +98,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 				}
 
 			}
-			lastBtn = btn
+			// lastBtn = btn
 
 		// A floor is reached
 		case flr := <-drv_floors:

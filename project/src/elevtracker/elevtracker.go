@@ -72,3 +72,12 @@ func SetDoorLampHallCalls(button elevio.ButtonEvent) bool {
 	}
 	return isStoppedAtFloor
 }
+
+func CheckIfOrderTaken(button elevio.ButtonEvent) bool {
+	for _, value := range ElevMap {
+		if value.QueueMat.Matrix[button.Floor][int(button.Button)]{
+			return true
+		}
+	}
+	return false
+}
