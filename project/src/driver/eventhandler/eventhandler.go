@@ -173,7 +173,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 					// finding the elevator(s) that are lost in the map
 					for key, value := range elevtr.ElevMap {
 						// comparing the lost elevators ID with IDs from the keys in the map
-						if key == pUpdt.Lost[i] {
+						if key == pUpdt.Lost[i] && curState.Alive {
 							// adding the lost elevator orders to this elevators queue matrix
 							tempMat = q.AddOrdersToCurrentQueue(curState.QueueMat, value.QueueMat)
 							curState.QueueMat = tempMat
@@ -188,16 +188,28 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 									curState.Alive = true
 								}
 							}
+							value.Alive = false
+							tempMat = q.ResetHallCalls(value.QueueMat)
+							value.QueueMat = tempMat
 						}
 					}
 				}
 			}
 
+			if pUpdt.New != "" {
+				for key, value := range elevtr.ElevMap {
+					if curState.ID == pUpdt.New && curState.ID == key{
+						tempMat = q.AddOrdersToCurrentQueue(curState.QueueMat,value.QueueMat)
+						curState.QueueMat = tempMat
+						curState.Alive = true
+					}
+				}
+			}
 			if elevtr.CheckEmptyMap() {
 				elevtr.InitMap(pUpdt)
-			} else {
-				elevtr.RemoveFromMap(pUpdt)
-			}
+			} //else {
+				//elevtr.RemoveFromMap(pUpdt)
+			//}
 
 		// The elevator receives a state update from other elevators on the network
 		// will happen when a heartbeat is sent

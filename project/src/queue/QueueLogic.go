@@ -90,13 +90,3 @@ func ClearAtCurrentFloor(queueMat def.QueueMatrix, floor int, dir elevio.MotorDi
 	return temp
 }
 
-func CheckEmptyQueue(queueMat def.QueueMatrix) bool {
-	for flr:=0; flr < def.NumFloors; flr++ {
-		for btn:=0; btn<def.NumButtons; btn++ {
-			if queueMat.Matrix[flr][btn] {
-				return false
-			}
-		}
-	}
-	return true
-}

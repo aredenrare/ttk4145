@@ -77,3 +77,25 @@ func SetHallLampsInQueue(queueMat def.QueueMatrix) {
 		}
 	}
 }
+
+func CheckEmptyQueue(queueMat def.QueueMatrix) bool {
+	for flr:=0; flr < def.NumFloors; flr++ {
+		for btn:=0; btn<def.NumButtons; btn++ {
+			if queueMat.Matrix[flr][btn] {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func ResetHallCalls(queueMat def.QueueMatrix) def.QueueMatrix {
+	temp := queueMat
+	for flr := 0; flr < def.NumFloors; flr++ {
+		for btn := 0; btn < def.NumButtons-1; btn++ {
+			temp.Matrix[flr][btn] = false
+		}
+	}
+	return temp
+
+}

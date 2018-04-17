@@ -59,7 +59,7 @@ func ChooseCheapestElevator(ordBtn elevio.ButtonEvent) def.ElevInfo {
 	var curCost int
 	for _, value := range elevtr.ElevMap {
 		curCost = CalculateCost(value, ordBtn)
-		if curCost < lowestCost {
+		if curCost < lowestCost && value.Alive{
 			lowestCost = curCost
 			bestElev = value
 		}
