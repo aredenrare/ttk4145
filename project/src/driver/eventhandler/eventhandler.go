@@ -48,13 +48,15 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			select {
 			case a := <-drv_floors:
 				initFlag = Init(a)
-				curState.ID, _ = ip.LocalIP()
-				curState.PrevFloor = 0
-				curState.Dir = elevio.MD_Stop
-				curState.QueueMat = q.InitQueue()
-				curState.Alive = true
+				
+				if a == 0{
+					curState.ID, _ = ip.LocalIP()
+					curState.PrevFloor = 0
+					curState.Dir = elevio.MD_Stop
+					curState.QueueMat = q.InitQueue()
+					curState.Alive = true
+				}
 				if initFlag {
-					// read cab calls from disk, add to queuematrix
 				}
 			}
 		}
@@ -240,7 +242,8 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 		// The elevator has orders it has not resolved within the OrderTime time limit
 		case <- OrderTimeOut:
 			curState.Alive = false
-			initFlag = false
+			curState.QueueMat = q.InitQueue()
+			//initFlag = false
 			fmt.Println("Elevator has timed out, the elevator will initialize when back")
 
 		}
