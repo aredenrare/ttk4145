@@ -55,7 +55,9 @@ func ShouldStop(queueMat def.QueueMatrix, floor int, dir elevio.MotorDirection) 
 	case elevio.MD_Up:
 		return queueMat.Matrix[floor][elevio.BT_HallUp] ||
 			queueMat.Matrix[floor][elevio.BT_Cab] || !RequestAbove(queueMat, floor)
-	case elevio.MD_Stop:
+	case elevio.MD_Srs at the elevators current floor, opens door
+	for btn := 0; btn < def.NumButtons; btn++ {
+		if curState.QueueMat.Matrix[curState.PrevFloor][btntop:
 		return queueMat.Matrix[floor][elevio.BT_HallDown] ||
 			queueMat.Matrix[floor][elevio.BT_Cab] || queueMat.Matrix[floor][elevio.BT_HallUp]
 	}
@@ -88,4 +90,15 @@ func ClearAtCurrentFloor(queueMat def.QueueMatrix, floor int, dir elevio.MotorDi
 		return temp3
 	}
 	return temp
+}
+
+func CheckEmptyQueue(queueMat def.QueueMatrix) bool {
+	for flr:=0; flr < def.NumFloors; flr++ {
+		for btn:=0; btn<def.NumButtons; btn++ {
+			if queueMat.Matrix[flr][btn] {
+				return false
+			}
+		}
+	}
+	return true
 }

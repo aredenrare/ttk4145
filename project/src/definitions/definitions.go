@@ -30,5 +30,6 @@ const NumFloors = 4
 
 var DoorOpenTime = time.Second * 2
 var HeartBeatTime = time.Millisecond * 50
+var OrderTime = time.Second * 30
 
 const FILE_NAME = "backup.txt"
