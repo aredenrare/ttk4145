@@ -17,7 +17,7 @@ import (
 var curState def.ElevInfo
 var initFlag bool = false
 var doorOpen = false
-//var redundancyFlag = false
+var redundancyFlag = false
 
 // This variable is used to avoid the same order to be calculated in the costfunction
 // if one button is pressed multiple times
@@ -43,6 +43,8 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 	for {
 		// Initializing the elevator on the first floor
 		for !initFlag {
+			dir = elevio.MD_Down
+			elevio.SetMotorDirection(dir)
 			doorOpen = false
 			elevtr.ResetAllLamps()
 			if curState.Alive != true {
@@ -50,13 +52,17 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			}
 			select {
 			case a := <-drv_floors:
-				initFlag = Init(a)
+				elevio.SetFloorIndicator(a)
+				//initFlag = Init(a)
 				
 				if a == 0{
+					elevio.SetMotorDirection(elevio.MD_Stop)
+					curState.Dir = elevio.MD_Stop
 					curState.ID, _ = ip.LocalIP()
 					curState.PrevFloor = 0
-					curState.Dir = elevio.MD_Stop
 					curState.QueueMat = q.InitQueue()
+					initFlag = true
+					fmt.Println("Initialized")
 				}
 				if initFlag && curState.PrevFloor == 0{
 					curState.Alive = true
@@ -78,9 +84,9 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 		// An order is noticed on this elevator
 		case btn := <-drv_buttons:
 			
-			//if !redundancyFlag {
-			//	break
-			//}
+			if !redundancyFlag {
+				break
+			}
 
 			// standing still at ordered floor, complete order
 			if curState.Dir == elevio.MD_Stop && curState.PrevFloor == btn.Floor {
@@ -154,11 +160,11 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			fmt.Printf("  New:      %q\n", pUpdt.New)
 			fmt.Printf("  Lost:     %q\n", pUpdt.Lost)
 			fmt.Printf("num peers: %+v\n", len(pUpdt.Peers))
-			//if len(pUpdt.Peers) > 1 {
-				//redundancyFlag = true
-			//} else {
-				//redundancyFlag = false
-			//}
+			if len(pUpdt.Peers) > 1 {
+				redundancyFlag = true
+			} else {
+				redundancyFlag = false
+			}
 			// If an elevator is lost from the network, this elevators takes its hall calls
 			// Implicit -> all other elevators takes its calls
 			if len(pUpdt.Lost) != 0 {
@@ -194,12 +200,15 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			}
 
 		// The elevator receives a state update from other elevators on the network
+		// will happen when a heartbeat is sent
 		case msgRec := <-elevInfoRx:
 			elevtr.UpdateMap(msgRec)
 			// Checks if some elevators on the network has timed out and can not be considered alive
 			// This elevator (implicit all other elevators alive) will then copy its hall calls and add them to its own queue matrix
 			for _, value := range elevtr.ElevMap {
 				if value.Alive != true && curState.Alive == true {
+					fmt.Println("A lost elevator is detected and dealt with, elevator found:")
+					fmt.Println(value.ID)
 					// adding the lost elevator orders to this elevators queue matrix
 					tempMat = q.AddOrdersToCurrentQueue(curState.QueueMat, value.QueueMat)
 					curState.QueueMat = tempMat
@@ -214,8 +223,11 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 							curState.Alive = true
 						}
 					}
+					value.QueueMat = q.InitQueue()
 				}
 			}
+			
+
 		// an order is received and the elevator checks if it should take it
 		case ordRec := <-orderRx:
 			if ordRec.State.ID == id {
@@ -233,21 +245,22 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 					}
 				}
 			}
-		// Update the elevators state to the network
+
+		// Update the elevator's state to the network
 		case <-heartBeat:
-			TrState := def.Message{ID: "", State: curState}
-			elevInfoTx <- TrState
-			elevtr.ResetEmptyHallCalls()
 			if q.CheckEmptyQueue(curState.QueueMat){
 				OrderTimeOut = time.After(def.OrderTime)
 				curState.Alive = true
 			}
+			TrState := def.Message{ID: "", State: curState}
+			elevInfoTx <- TrState
+			elevtr.ResetEmptyHallCalls()
+
 		// The elevator has orders it has not resolved within the OrderTime time limit
 		case <- OrderTimeOut:
 			curState.Alive = false
-			initFlag = false
-			fmt.Println("Elevator has timed out, the elevator will initialize when back")
 
+			fmt.Println("Elevator has timed out, the elevator will initialize when back")
 		}
 	}
 }
