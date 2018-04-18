@@ -7,7 +7,7 @@ import (
 )
 
 type QueueMatrix struct {
-	Matrix [NumFloors][NumButtons]bool `json:"tempMat"`
+	Matrix [NumFloors][NumButtons]bool
 }
 
 type ElevInfo struct {
@@ -33,4 +33,3 @@ var DoorOpenTime = time.Second * 2
 var HeartBeatTime = time.Millisecond * 50
 var OrderTime = time.Second * 15
 
-const FILE_NAME = "backup.txt"
