@@ -107,6 +107,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 					tempMat = q.AddToQueue(tempElev.QueueMat, btn)
 					tempElev.QueueMat = tempMat
 					TrOrder := def.Message{ID: "", State: tempElev}
+					fmt.Printf("order sent: %+v\n",TrOrder)
 					orderTx <- TrOrder
 				}
 
@@ -137,7 +138,22 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			doorOpen = false
 			elevio.SetDoorOpenLamp(doorOpen)
 
-		// peers are added or lost from the network
+		// Obstruction triggered
+		case obstr := <-drv_obstr:
+			if obstr {
+				tempDir = elevio.MD_Stop
+			} else {
+				tempDir = dir
+			}
+			elevio.SetMotorDirection(dir)
+			curState.Dir = dir
+
+			// Stop triggered
+		case stop := <-drv_stop:
+			fmt.Println(stop)
+			initFlag = false
+		
+			// peers are added or lost from the network
 		case pUpdt := <-peerUpdateCh:
 			fmt.Printf("Peer update:\n")
 			fmt.Printf("  Peers:    %q\n", pUpdt.Peers)
@@ -161,6 +177,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 							// adding the lost elevator orders to this elevators queue matrix
 							tempMat = q.AddOrdersToCurrentQueue(curState.QueueMat, value.QueueMat)
 							curState.QueueMat = tempMat
+							fmt.Println("an order is added to the queue")
 							for btn := 0; btn < def.NumButtons; btn++ {
 								// resolves orders that are on this elevators floor if it stands still
 								if curState.QueueMat.Matrix[curState.PrevFloor][btn] && curState.Dir == elevio.MD_Stop {
@@ -178,6 +195,8 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			}
 			if elevtr.CheckEmptyMap() {
 				elevtr.InitMap(pUpdt)
+			} else {
+				elevtr.RemoveFromMap(pUpdt)
 			}
 
 		// The elevator receives a state update from other elevators on the network
@@ -204,6 +223,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 							curState.Alive = true
 						}
 					}
+					value.QueueMat = q.InitQueue()
 				}
 			}
 			
@@ -211,8 +231,10 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 		// an order is received and the elevator checks if it should take it
 		case ordRec := <-orderRx:
 			if ordRec.State.ID == id {
+				fmt.Println("Received an order")
 				tempMat = q.AddOrdersToCurrentQueue(curState.QueueMat, ordRec.State.QueueMat)
 				curState.QueueMat = tempMat
+				fmt.Println(curState.QueueMat)
 				// resolves orders at the elevators current floor, opens door
 				for btn := 0; btn < def.NumButtons; btn++ {
 					if curState.QueueMat.Matrix[curState.PrevFloor][btn] && curState.Dir == elevio.MD_Stop {

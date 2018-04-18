@@ -2,7 +2,6 @@ package definitions
 
 import (
 	"time"
-
 	elevio "../driver/elevio"
 )
 

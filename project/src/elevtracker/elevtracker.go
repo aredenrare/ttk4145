@@ -14,9 +14,16 @@ func InitializeElevTracker() {
 }
 
 func InitMap(peer peers.PeerUpdate) {
+	// tempMap := make(map[string]def.ElevInfo)
 	initMat := q.InitQueue()
 	initState := def.ElevInfo{ID: peer.New, PrevFloor: 0, Dir: elevio.MD_Stop, QueueMat: initMat}
 	ElevMap[peer.New] = initState
+}
+
+func RemoveFromMap(peer peers.PeerUpdate) {
+	for _, lost := range peer.Lost {
+		delete(ElevMap, lost)
+	}
 }
 
 func UpdateMap(message def.Message) {
