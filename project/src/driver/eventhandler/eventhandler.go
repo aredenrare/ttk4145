@@ -60,7 +60,11 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 					curState.Dir = elevio.MD_Stop
 					curState.ID, _ = ip.LocalIP()
 					curState.PrevFloor = 0
-					//curState.QueueMat = q.InitQueue()
+					if value, ok := elevtr.ElevMap[curState.ID]; ok {
+						curState.QueueMat = value.QueueMat
+					} else {
+						curState.QueueMat = q.InitQueue()
+					}
 					initFlag = true
 					fmt.Println("Initialized")
 				}
@@ -191,18 +195,9 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 							value.Alive = false
 							tempMat = q.ResetHallCalls(value.QueueMat)
 							value.QueueMat = tempMat
+							TrState := def.Message{ID:"", State: value}
+							elevInfoTx <- TrState
 						}
-					}
-				}
-			}
-
-			if pUpdt.New != "" {
-				for key, value := range elevtr.ElevMap {
-					if curState.ID == pUpdt.New && curState.ID == key{
-						fmt.Println("Found my old queue")
-						tempMat = q.AddCabCallsToCurrentQueue(curState.QueueMat,value.QueueMat)
-						curState.QueueMat = tempMat
-						curState.Alive = true
 					}
 				}
 			}
@@ -236,7 +231,10 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 							curState.Alive = true
 						}
 					}
-					value.QueueMat = q.InitQueue()
+					tempMat = q.ResetHallCalls(value.QueueMat)
+					value.QueueMat = tempMat
+					TrState := def.Message{ID:"", State: value}
+					elevInfoTx <- TrState
 				}
 			}
 			
