@@ -53,9 +53,9 @@ func ResetEmptyHallCalls() {
 	}
 }
 
-func ResetAllLamps() {
+func ResetHallLamps() {
 	for flr := 0; flr < def.NumFloors; flr++ {
-		for btn := 0; btn < def.NumButtons; btn++ {
+		for btn := 0; btn < def.NumButtons-1; btn++ {
 			tempBtn := elevio.ButtonType(btn)
 			tempButton := elevio.ButtonEvent{Floor: flr, Button: tempBtn}
 			elevio.SetButtonLamp(tempButton.Button, tempButton.Floor, false)
