@@ -19,6 +19,7 @@ var elevatorPort3 int
 var simulatorPort string
 
 func main() {
+	// To run 3 simulated elevators on one computer
 	flag.IntVar(&elevatorPort1, "port1", 30001, "port for peers")
 	flag.IntVar(&elevatorPort2, "port2", 31001, "port for elevinfo")
 	flag.IntVar(&elevatorPort3, "port3", 32001, "port for orders")

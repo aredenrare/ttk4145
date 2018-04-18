@@ -50,10 +50,6 @@ func PrintQueue(queueMat def.QueueMatrix) {
 	fmt.Printf("\n")
 }
 
-func CheckInQueue(queueMat def.QueueMatrix, floor int, button elevio.ButtonType) bool {
-	return queueMat.Matrix[floor][int(button)]
-}
-
 func AddOrdersToCurrentQueue(queueMat def.QueueMatrix, orderMat def.QueueMatrix) def.QueueMatrix {
 	temp := queueMat
 	for flr := 0; flr < def.NumFloors; flr++ {
@@ -61,16 +57,6 @@ func AddOrdersToCurrentQueue(queueMat def.QueueMatrix, orderMat def.QueueMatrix)
 			if orderMat.Matrix[flr][btn] == true {
 				temp.Matrix[flr][btn] = true
 			}
-		}
-	}
-	return temp
-}
-func AddCabCallsToCurrentQueue(queueMat def.QueueMatrix, orderMat def.QueueMatrix) def.QueueMatrix {
-	temp := queueMat
-	for flr := 0; flr < def.NumFloors; flr++ {
-		btn := def.NumButtons
-		if orderMat.Matrix[flr][btn] == true {
-			temp.Matrix[flr][btn] = true
 		}
 	}
 	return temp

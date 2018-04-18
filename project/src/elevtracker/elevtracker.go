@@ -14,7 +14,6 @@ func InitializeElevTracker() {
 }
 
 func InitMap(peer peers.PeerUpdate) {
-	// tempMap := make(map[string]def.ElevInfo)
 	initMat := q.InitQueue()
 	initState := def.ElevInfo{ID: peer.New, PrevFloor: 0, Dir: elevio.MD_Stop, QueueMat: initMat}
 	ElevMap[peer.New] = initState
@@ -61,16 +60,6 @@ func ResetAllLamps() {
 			elevio.SetButtonLamp(tempButton.Button, tempButton.Floor, false)
 		}
 	}
-}
-
-func SetDoorLampHallCalls(button elevio.ButtonEvent) bool {
-	isStoppedAtFloor := false
-	for _, value := range ElevMap {
-		if value.PrevFloor == button.Floor && value.Dir == elevio.MD_Stop {
-			isStoppedAtFloor = true
-		}
-	}
-	return isStoppedAtFloor
 }
 
 func CheckIfOrderTaken(button elevio.ButtonEvent) bool {
