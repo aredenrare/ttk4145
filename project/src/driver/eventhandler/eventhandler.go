@@ -62,11 +62,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 					curState.Dir = elevio.MD_Stop
 					curState.ID, _ = ip.LocalIP()
 					curState.PrevFloor = 0
-					if value, ok := elevtr.ElevMap[curState.ID]; ok {
-						curState.QueueMat = value.QueueMat
-					} else {
-						curState.QueueMat = q.InitQueue()
-					}
+					curState.QueueMat = q.InitQueue()
 					initFlag = true
 					fmt.Println("Initialized")
 				}
@@ -104,7 +100,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 				doorTimeout = time.After(def.DoorOpenTime)
 				OrderTimeOut = time.After(def.OrderTime)
 				curState.Alive = true
-				fmt.Println("standing at ordered floor: curState.Alive = true")
+				fmt.Println("standing at ordered floor:curState.Alive curState.Alive = true")
 
 			} else if btn.Button == elevio.BT_Cab { // deal with cab call
 				tempMat = curState.QueueMat
@@ -131,7 +127,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 				tempDir = elevio.MD_Stop
 				tempMat = q.ClearAtCurrentFloor(curState.QueueMat, flr, dir)
 				curState.QueueMat = tempMat
-				doorOpen = true
+				doorOpen = truecurState.Alive
 				elevio.SetDoorOpenLamp(doorOpen)
 				doorTimeout = time.After(def.DoorOpenTime)
 				OrderTimeOut = time.After(def.OrderTime)
@@ -155,7 +151,7 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			} else {
 				tempDir = dir
 			}
-			elevio.SetMotorDirection(dir)
+			elevio.SetMotorDirection(dir)curState.Alive
 			curState.Dir = dir
 
 			// Stop triggered
@@ -198,11 +194,6 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 									fmt.Println("taking over orders from an elev lost from network, standing still at ordered floor: curState.Alive = true")
 								}
 							}
-							value.Alive = false
-							tempMat = q.ResetHallCalls(value.QueueMat)
-							value.QueueMat = tempMat
-							TrState := def.Message{ID:"", State: value}
-							elevInfoTx <- TrState
 						}
 					}
 				}
@@ -238,10 +229,6 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 							fmt.Println("taking over orders from an !Alive elevator still on the network: curState.Alive = true")
 						}
 					}
-					tempMat = q.ResetHallCalls(value.QueueMat)
-					value.QueueMat = tempMat
-					TrState := def.Message{ID:"", State: value}
-					elevInfoTx <- TrState
 				}
 			}
 			
@@ -270,7 +257,6 @@ func EventHandlerMain(drv_buttons <-chan elevio.ButtonEvent, drv_floors <-chan i
 			if q.CheckEmptyQueue(curState.QueueMat){
 				OrderTimeOut = time.After(def.OrderTime)
 				curState.Alive = true
-				fmt.Println("Empty queue: curState.Alive = true")
 			}
 			TrState := def.Message{ID: "", State: curState}
 			elevInfoTx <- TrState
